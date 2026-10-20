@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión Bebé — Simulación Interactiva de Obstetricia y Salud Perinatal</title>
+<style>
+  :root {
+    --bg-main: #FFF8F5;
+    --card-bg: #FFFFFF;
+    --primary: #E05650;
+    --primary-hover: #C9433D;
+    --secondary: #F59E0B;
+    --accent-mint: #10B981;
+    --accent-lavender: #8B5CF6;
+    --text-dark: #2D2422;
+    --text-muted: #786965;
+    --border-soft: #F5E3DA;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, .brand-font {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Trebuchet MS", sans-serif;
+    font-weight: 800;
+  }
+
+  /* Custom Animations */
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.1); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.06); }
+  }
+
+  .animate-heartbeat {
+    animation: heartbeat 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+  }
+  .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+  @keyframes ping {
+    75%, 100% { transform: scale(2); opacity: 0; }
+  }
+  .animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #FDF3EE; }
+  ::-webkit-scrollbar-thumb { background: #E8C1B2; border-radius: 99px; }
+
+  /* Layout Utilities */
+  .max-w-7xl { max-width: 80rem; margin-left: auto; margin-right: auto; }
+  .max-w-2xl { max-width: 42rem; }
+  .max-w-xl { max-width: 36rem; }
+  .max-w-lg { max-width: 32rem; }
+  .max-w-md { max-width: 28rem; }
+  .max-w-sm { max-width: 24rem; }
+  .w-full { width: 100%; }
+  .flex-1 { flex: 1 1 0%; }
+  .shrink-0 { flex-shrink: 0; }
+
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .flex-wrap { flex-wrap: wrap; }
+  .items-center { align-items: center; }
+  .items-start { align-items: flex-start; }
+  .justify-between { justify-content: space-between; }
+  .justify-center { justify-content: center; }
+  .justify-end { justify-content: flex-end; }
+
+  .grid { display: grid; }
+  .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  @media (min-width: 640px) {
+    .sm\:flex-row { flex-direction: row; }
+    .sm\:items-center { align-items: center; }
+    .sm\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .sm\:text-5xl { font-size: 3rem; line-height: 1; }
+    .sm\:text-base { font-size: 1rem; line-height: 1.5rem; }
+    .sm\:text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .sm\:p-8 { padding: 2rem; }
+    .sm\:p-10 { padding: 2.5rem; }
+    .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 768px) {
+    .md\:flex-row { flex-direction: row; }
+    .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1024px) {
+    .lg\:block { display: block; }
+    .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .lg\:col-span-8 { grid-column: span 8 / span 8; }
+    .lg\:col-span-4 { grid-column: span 4 / span 4; }
+    .lg\:col-span-2 { grid-column: span 2 / span 2; }
+  }
+
+  /* Gap & Spacing */
+  .gap-1 { gap: 0.25rem; }
+  .gap-1\.5 { gap: 0.375rem; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-2\.5 { gap: 0.625rem; }
+  .gap-3 { gap: 0.75rem; }
+  .gap-3\.5 { gap: 0.875rem; }
+  .gap-4 { gap: 1rem; }
+  .gap-6 { gap: 1.5rem; }
+
+  .space-y-1 > * + * { margin-top: 0.25rem; }
+  .space-y-2 > * + * { margin-top: 0.5rem; }
+  .space-y-2\.5 > * + * { margin-top: 0.625rem; }
+  .space-y-3 > * + * { margin-top: 0.75rem; }
+  .space-y-4 > * + * { margin-top: 1rem; }
+  .space-y-5 > * + * { margin-top: 1.25rem; }
+  .space-y-6 > * + * { margin-top: 1.5rem; }
+
+  .p-1 { padding: 0.25rem; }
+  .p-1\.5 { padding: 0.375rem; }
+  .p-2 { padding: 0.5rem; }
+  .p-2\.5 { padding: 0.625rem; }
+  .p-3 { padding: 0.75rem; }
+  .p-3\.5 { padding: 0.875rem; }
+  .p-4 { padding: 1rem; }
+  .p-5 { padding: 1.25rem; }
+  .p-6 { padding: 1.5rem; }
+  .p-8 { padding: 2rem; }
+
+  .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+  .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .px-3\.5 { padding-left: 0.875rem; padding-right: 0.875rem; }
+  .px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+  .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+  .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+  .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+  .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  .py-3\.5 { padding-top: 0.875rem; padding-bottom: 0.875rem; }
+  .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+  .mb-0\.5 { margin-bottom: 0.125rem; }
+  .mb-1 { margin-bottom: 0.25rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mt-12 { margin-top: 3rem; }
+  .ml-auto { margin-left: auto; }
+  .mx-auto { margin-left: auto; margin-right: auto; }
+
+  .pt-1 { padding-top: 0.25rem; }
+  .pt-2 { padding-top: 0.5rem; }
+  .pt-4 { padding-top: 1rem; }
+  .pb-4 { padding-bottom: 1rem; }
+
+  /* Sizing & Positioning */
+  .w-2\.5 { width: 0.625rem; } .h-2\.5 { height: 0.625rem; }
+  .w-3 { width: 0.75rem; } .h-3 { height: 0.75rem; }
+  .w-8 { width: 2rem; } .h-8 { height: 2rem; }
+  .w-10 { width: 2.5rem; } .h-10 { height: 2.5rem; }
+  .w-12 { width: 3rem; } .h-12 { height: 3rem; }
+  .w-13 { width: 3.25rem; } .h-13 { height: 3.25rem; }
+  .w-14 { width: 3.5rem; } .h-14 { height: 3.5rem; }
+  .w-16 { width: 4rem; } .h-16 { height: 4rem; }
+  .w-28 { width: 7rem; }
+  .w-64 { width: 16rem; } .h-64 { height: 16rem; }
+  .w-9 { width: 2.25rem; } .h-9 { height: 2.25rem; }
+  .h-20 { height: 5rem; }
+  .h-full { height: 100%; }
+
+  .sticky { position: sticky; }
+  .top-0 { top: 0; }
+  .fixed { position: fixed; }
+  .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+  .relative { position: relative; }
+  .absolute { position: absolute; }
+  .right-4 { right: 1rem; } .top-4 { top: 1rem; }
+  .-right-8 { right: -2rem; } .-top-8 { top: -2rem; }
+  .right-12 { right: 3rem; } .top-1\/2 { top: 50%; }
+  .-translate-y-1\/2 { transform: translateY(-50%); }
+
+  .z-10 { z-index: 10; }
+  .z-30 { z-index: 30; }
+  .z-50 { z-index: 50; }
+
+  /* Colors & Styling */
+  .bg-white { background-color: #FFFFFF; }
+  .bg-white\/15 { background-color: rgba(255, 255, 255, 0.15); }
+  .bg-white\/20 { background-color: rgba(255, 255, 255, 0.20); }
+  .bg-white\/25 { background-color: rgba(255, 255, 255, 0.25); }
+  .bg-gray-50 { background-color: #F9FAFB; }
+  .bg-gray-100 { background-color: #F3F4F6; }
+  .bg-gray-200 { background-color: #E5E7EB; }
+  .bg-gray-300 { background-color: #D1D5DB; }
+  .bg-red-100 { background-color: #FEE2E2; }
+  .bg-emerald-100 { background-color: #D1FAE5; }
+  .bg-purple-100 { background-color: #F3E8FF; }
+  .bg-amber-100 { background-color: #FEF3C7; }
+  .bg-rose-100 { background-color: #FFE4E6; }
+  .bg-teal-100 { background-color: #CCFBF1; }
+  .bg-orange-50 { background-color: #FFF7ED; }
+  .bg-emerald-50 { background-color: #ECFDF5; }
+  .bg-emerald-200 { background-color: #A7F3D0; }
+  .bg-emerald-900 { background-color: #064E3B; }
+  .bg-emerald-900\/40 { background-color: rgba(6, 78, 59, 0.4); }
+  .bg-emerald-950\/80 { background-color: rgba(2, 44, 34, 0.8); }
+  .bg-amber-50 { background-color: #FFFBEB; }
+  .bg-amber-200 { background-color: #FDE68A; }
+  .bg-blue-50 { background-color: #EFF6FF; }
+  .bg-purple-50 { background-color: #FAF5FF; }
+  .bg-purple-200 { background-color: #E9D5FF; }
+  .bg-teal-50\/60 { background-color: rgba(240, 253, 250, 0.6); }
+  .bg-rose-50\/60 { background-color: rgba(fff1f2, 0.6); }
+  .bg-purple-50\/60 { background-color: rgba(250, 245, 255, 0.6); }
+  .bg-amber-50\/60 { background-color: rgba(255, 251, 235, 0.6); }
+  .bg-\[\#FFF8F5\] { background-color: #FFF8F5; }
+  .bg-\[\#FEF0EC\] { background-color: #FEF0EC; }
+  .bg-\[\#FAF5F0\] { background-color: #FAF5F0; }
+  .bg-\[\#111A19\] { background-color: #111A19; }
+  .bg-\[\#E05650\] { background-color: #E05650; }
+  .bg-\[\#10B981\] { background-color: #10B981; }
+
+  .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+  .from-\[\#E05650\] { --tw-gradient-from: #E05650; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(224, 86, 80, 0)); }
+  .via-\[\#EA6C5B\] { --tw-gradient-stops: var(--tw-gradient-from), #EA6C5B, var(--tw-gradient-to, rgba(234, 108, 91, 0)); }
+  .to-\[\#F59E0B\] { --tw-gradient-to: #F59E0B; }
+  .from-\[\#FFF2EC\] { --tw-gradient-from: #FFF2EC; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 242, 236, 0)); }
+  .via-\[\#FFE3D6\] { --tw-gradient-stops: var(--tw-gradient-from), #FFE3D6, var(--tw-gradient-to, rgba(255, 227, 214, 0)); }
+  .to-\[\#FDF0E6\] { --tw-gradient-to: #FDF0E6; }
+  .from-\[\#FFF8F5\] { --tw-gradient-from: #FFF8F5; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 248, 245, 0)); }
+  .to-\[\#FFEBE4\] { --tw-gradient-to: #FFEBE4; }
+
+  /* Borders & Radius */
+  .border { border-width: 1px; border-style: solid; }
+  .border-2 { border-width: 2px; border-style: solid; }
+  .border-4 { border-width: 4px; border-style: solid; }
+  .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+  .border-t { border-top-width: 1px; border-top-style: solid; }
+  .border-collapse { border-collapse: collapse; }
+
+  .border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+  .border-white\/25 { border-color: rgba(255, 255, 255, 0.25); }
+  .border-white\/30 { border-color: rgba(255, 255, 255, 0.3); }
+  .border-gray-100 { border-color: #F3F4F6; }
+  .border-gray-200 { border-color: #E5E7EB; }
+  .border-gray-300 { border-color: #D1D5DB; }
+  .border-\[\#F5E3DA\] { border-color: #F5E3DA; }
+  .border-\[\#FAC6B3\] { border-color: #FAC6B3; }
+  .border-\[\#FCD2C7\] { border-color: #FCD2C7; }
+  .border-\[\#E05650\]\/20 { border-color: rgba(224, 86, 80, 0.2); }
+  .border-\[\#E05650\]\/30 { border-color: rgba(224, 86, 80, 0.3); }
+  .border-\[\#F59E0B\]\/40 { border-color: rgba(245, 158, 11, 0.4); }
+  .border-emerald-800 { border-color: #065F46; }
+  .border-emerald-700\/50 { border-color: rgba(4, 120, 87, 0.5); }
+  .border-emerald-100 { border-color: #D1FAE5; }
+  .border-emerald-200 { border-color: #A7F3D0; }
+  .border-emerald-400 { border-color: #34D399; }
+  .border-purple-200 { border-color: #E9D5FF; }
+  .border-rose-100 { border-color: #FFE4E6; }
+  .border-amber-100 { border-color: #FEF3C7; }
+  .border-amber-200 { border-color: #FDE68A; }
+  .border-blue-100 { border-color: #DBEAFE; }
+  .border-teal-100 { border-color: #CCFBF1; }
+
+  .rounded-md { border-radius: 0.375rem; }
+  .rounded-lg { border-radius: 0.5rem; }
+  .rounded-xl { border-radius: 0.75rem; }
+  .rounded-2xl { border-radius: 1rem; }
+  .rounded-3xl { border-radius: 1.5rem; }
+  .rounded-full { border-radius: 9999px; }
+
+  /* Typography */
+  .text-white { color: #FFFFFF; }
+  .text-white\/10 { color: rgba(255, 255, 255, 0.1); }
+  .text-white\/90 { color: rgba(255, 255, 255, 0.9); }
+  .text-gray-400 { color: #9CA3AF; }
+  .text-gray-500 { color: #6B7280; }
+  .text-gray-600 { color: #4B5563; }
+  .text-gray-700 { color: #374151; }
+  .text-gray-800 { color: #1F2937; }
+  .text-\[\#2D2422\] { color: #2D2422; }
+  .text-\[\#E05650\] { color: #E05650; }
+  .text-\[\#F59E0B\] { color: #F59E0B; }
+  .text-emerald-300 { color: #6EE7B7; }
+  .text-emerald-400 { color: #34D399; }
+  .text-emerald-600 { color: #059669; }
+  .text-emerald-700 { color: #047857; }
+  .text-emerald-800 { color: #065F46; }
+  .text-emerald-900 { color: #064E3B; }
+  .text-purple-600 { color: #9333EA; }
+  .text-purple-700 { color: #7E22CE; }
+  .text-purple-800 { color: #6B21A8; }
+  .text-purple-900 { color: #581C87; }
+  .text-amber-600 { color: #D97706; }
+  .text-amber-700 { color: #B45309; }
+  .text-amber-800 { color: #92400E; }
+  .text-amber-900 { color: #78350F; }
+  .text-rose-600 { color: #E11D48; }
+  .text-rose-800 { color: #9F1239; }
+  .text-rose-900 { color: #881337; }
+  .text-teal-600 { color: #0D9488; }
+  .text-teal-800 { color: #115E59; }
+  .text-orange-900 { color: #7C2D12; }
+
+  .text-\[9px\] { font-size: 9px; }
+  .text-\[10px\] { font-size: 10px; }
+  .text-\[11px\] { font-size: 11px; }
+  .text-xs { font-size: 0.75rem; line-height: 1rem; }
+  .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .text-base { font-size: 1rem; line-height: 1.5rem; }
+  .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-5xl { font-size: 3rem; line-height: 1; }
+  .text-9xl { font-size: 8rem; line-height: 1; }
+
+  .font-medium { font-weight: 500; }
+  .font-bold { font-weight: 700; }
+  .font-extrabold { font-weight: 800; }
+  .font-black { font-weight: 900; }
+  .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+  .uppercase { text-transform: uppercase; }
+  .tracking-wider { letter-spacing: 0.05em; }
+  .tracking-widest { letter-spacing: 0.1em; }
+
+  .text-center { text-align: center; }
+  .text-left { text-align: left; }
+  .text-right { text-align: right; }
+
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .leading-tight { line-height: 1.25; }
+  .leading-snug { line-height: 1.375; }
+  .leading-relaxed { line-height: 1.625; }
+
+  /* Effects & Display */
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+  .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+  .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+  .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+
+  .backdrop-blur-sm { backdrop-filter: blur(4px); }
+  .backdrop-blur-md { backdrop-filter: blur(12px); }
+
+  .opacity-50 { opacity: 0.5; }
+  .opacity-75 { opacity: 0.75; }
+  .opacity-80 { opacity: 0.8; }
+  .opacity-90 { opacity: 0.9; }
+
+  .pointer-events-none { pointer-events: none; }
+  .select-none { user-select: none; }
+
+  .hidden { display: none !important; }
+  .block { display: block; }
+  .inline-block { display: inline-block; }
+
+  .overflow-hidden { overflow: hidden; }
+  .overflow-x-auto { overflow-x: auto; }
+  .overflow-y-auto { overflow-y: auto; }
+
+  .cursor-pointer { cursor: pointer; }
+  .cursor-not-allowed { cursor: not-allowed; }
+
+  button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+  }
+  input {
+    font-family: inherit;
+  }
+
+  .choice-btn {
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .choice-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(224, 86, 80, 0.2);
+  }
+
+  .tab-btn { transition: all 0.2s ease; }
+  .tab-btn.active {
+    background-color: var(--primary);
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(224, 86, 80, 0.35);
+  }
+
+  #ctgCanvas {
+    background: #111A19;
+    border-radius: 12px;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER WITH LOGO -->
+  <header class="bg-gradient-to-r from-[#E05650] via-[#EA6C5B] to-[#F59E0B] text-white shadow-md relative overflow-hidden">
+    <div class="absolute -right-8 -top-8 text-white/10 text-9xl font-bold select-none pointer-events-none">🩺</div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 relative z-10">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <!-- BRAND LOGO AREA -->
+        <div class="flex items-center gap-3">
+          <div class="w-13 h-13 p-2 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner border border-white/30 animate-heartbeat shrink-0">
+            <svg class="w-9 h-9 text-white" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M32 56C32 56 10 40.5 10 24.5C10 17 15.5 11.5 22.5 11.5C26.5 11.5 30 13.5 32 16.5C34 13.5 37.5 11.5 41.5 11.5C48.5 11.5 54 17 54 24.5C54 40.5 32 56 32 56Z" fill="#FFF" fill-opacity="0.25" stroke="#FFF" stroke-width="3.5" stroke-linejoin="round"/>
+              <circle cx="27" cy="24" r="5" fill="#FFF"/>
+              <path d="M22 36C22 31.5 25.5 28 30 28C33.5 28 36.5 30 37.5 33" stroke="#FFF" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="36" cy="23" r="3.5" fill="#FFF"/>
+              <path d="M36 34C36 31 38 29 40.5 29C42.5 29 44 30.5 44 32.5" stroke="#FFF" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M48 10V18M44 14H52" stroke="#FFF" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="bg-white/25 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Simulador Clínico (Offline)</span>
+              <span class="text-xs text-white/90 font-medium">Obstetricia & Salud Materno-Fetal</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Misión Bebé — 20 Niveles</h1>
+          </div>
+        </div>
+
+        <!-- Controls Header -->
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+          
+          <button onclick="openWelcomeModal()" class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition border border-white/25">
+            <span>👥</span> Editar Jugadores
+          </button>
+
+          <button id="dopplerSoundBtn" onclick="toggleDoppler()" class="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition border border-white/20">
+            <span id="dopplerIcon">❤️</span>
+            <span id="dopplerText">Doppler: OFF</span>
+          </button>
+
+          <button id="soundToggleBtn" onclick="toggleAudio()" class="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition border border-white/20">
+            <span id="soundIcon">🔊</span>
+            <span id="soundStatusText">Efectos: ON</span>
+          </button>
+
+          <button onclick="openResetModal()" class="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold transition border border-white/20">
+            <span>↻</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-white border-b border-[#F5E3DA] sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between overflow-x-auto py-2.5 gap-2 scrollbar-none">
+        <div class="flex items-center gap-2 min-w-max">
+          <button onclick="switchTab('home')" id="tab-home" class="tab-btn active px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition text-gray-600 hover:bg-gray-100">
+            <span>🏠</span> 1. Inicio & Equipos
+          </button>
+          <button onclick="switchTab('patients')" id="tab-patients" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition text-gray-600 hover:bg-gray-100">
+            <span>🤰</span> 2. Pacientes (20)
+          </button>
+          <button onclick="switchTab('game')" id="tab-game" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition text-gray-600 hover:bg-gray-100">
+            <span>🩺</span> 3. Centro de Misiones
+          </button>
+          <button onclick="switchTab('tools')" id="tab-tools" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition text-gray-600 hover:bg-gray-100">
+            <span>📚</span> 4. Guías & Protocolos
+          </button>
+          <button onclick="switchTab('prizes')" id="tab-prizes" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition text-gray-600 hover:bg-gray-100">
+            <span>🏆</span> 5. Logros & Diploma
+          </button>
+        </div>
+
+        <div class="bg-[#FEF0EC] text-[#E05650] border border-[#FCD2C7] px-3.5 py-1.5 rounded-xl flex items-center gap-2 font-extrabold text-xs shrink-0">
+          <span>⭐</span>
+          <span id="globalPoints">0 PTS</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- GLOBAL SUMMARY SCOREBAR -->
+    <section class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-white p-3.5 rounded-2xl border border-[#F5E3DA] shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-red-100 text-[#E05650] flex items-center justify-center font-bold text-lg">🎯</div>
+        <div>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Misión Actual</p>
+          <p class="text-sm font-extrabold text-gray-800" id="statMissionNumber">1 / 20</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-2xl border border-[#F5E3DA] shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg">✅</div>
+        <div>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Completadas</p>
+          <p class="text-sm font-extrabold text-gray-800" id="statCompleted">0 / 20</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-2xl border border-[#F5E3DA] shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg">👥</div>
+        <div>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Turno Activo</p>
+          <p class="text-sm font-extrabold text-purple-700 truncate max-w-[120px]" id="statTurnTeam">Equipo 1</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-2xl border border-[#F5E3DA] shadow-sm flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg">🏅</div>
+        <div>
+          <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Nivel Docente</p>
+          <p class="text-sm font-extrabold text-amber-700 truncate max-w-[120px]" id="statLevelName">Nivel 1: Inicial</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== WINDOW 1: HOME & TEAM SETUP ==================== -->
+    <div id="view-home" class="tab-content space-y-6">
+      
+      <div class="bg-gradient-to-br from-[#FFF2EC] via-[#FFE3D6] to-[#FDF0E6] rounded-3xl p-6 sm:p-10 border border-[#FAC6B3] relative overflow-hidden shadow-sm">
+        <div class="max-w-2xl relative z-10 space-y-4">
+          <span class="bg-[#E05650] text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-block">
+            Simulador de Aula Perinatal · 20 Misiones
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-extrabold text-[#2D2422] leading-tight">
+            Acompaña la vida desde la preconcepción hasta el puerperio 👶🏻✨
+          </h2>
+          <p class="text-gray-600 leading-relaxed text-sm sm:text-base">
+            Bienvenido al entorno interactivo de simulación clínica. Participa individualmente o por equipos con los nombres de tus estudiantes, toma decisiones clínicas informadas y analiza los casos perinatales sin necesidad de conexión a internet.
+          </p>
+
+          <div class="pt-2 flex flex-wrap gap-3">
+            <button onclick="openWelcomeModal()" class="bg-[#10B981] hover:bg-[#0D9668] text-white px-6 py-3.5 rounded-2xl font-black text-sm transition shadow-lg flex items-center gap-2">
+              <span>✍️</span> Registrar Nombre de Jugadores
+            </button>
+            <button onclick="switchTab('game')" class="bg-[#E05650] hover:bg-[#C9433D] text-white px-6 py-3.5 rounded-2xl font-black text-sm transition shadow-lg flex items-center gap-2">
+              <span>🚀</span> Ir al Centro de Misiones
+            </button>
+          </div>
+        </div>
+
+        <div class="hidden lg:block absolute right-12 top-1/2 -translate-y-1/2 opacity-90">
+          <svg class="w-64 h-64 text-[#E05650]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 88C50 88 15 63 15 38C15 26 24 17 35 17C41 17 46.5 20 50 25C53.5 20 59 17 65 17C76 17 85 26 85 38C85 63 50 88 50 88Z" fill="#E05650" fill-opacity="0.12" stroke="#E05650" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="42" cy="38" r="8" fill="#E05650"/>
+            <circle cx="56" cy="36" r="6" fill="#F59E0B"/>
+            <path d="M34 58C34 50 40 44 48 44C54 44 59 47 61 52" stroke="#E05650" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-[#F5E3DA] shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h3 class="text-2xl font-extrabold text-gray-800">👥 Registro de Equipos e Integrantes</h3>
+            <p class="text-xs text-gray-500">Configura los nombres de las personas o equipos que van a participar en la partida.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-gray-500">N° de Equipos:</span>
+            <div class="flex bg-gray-100 p-1 rounded-xl" id="teamCountSelectorHome">
+              <button onclick="setTeamCount(2)" id="btnCountHome2" class="px-3 py-1 rounded-lg font-bold text-xs">2</button>
+              <button onclick="setTeamCount(3)" id="btnCountHome3" class="px-3 py-1 rounded-lg font-bold text-xs bg-[#E05650] text-white">3</button>
+              <button onclick="setTeamCount(4)" id="btnCountHome4" class="px-3 py-1 rounded-lg font-bold text-xs">4</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="teamInputGridHome"></div>
+
+        <div class="pt-2 flex justify-end">
+          <button onclick="saveTeamNamesAndStart()" class="bg-[#10B981] hover:bg-[#0D9668] text-white px-6 py-3 rounded-2xl font-extrabold text-xs transition shadow-md flex items-center gap-2">
+            <span>✅</span> Guardar Jugadores e Iniciar Misiones
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-3xl border border-[#F5E3DA] shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-bold">🩺</div>
+          <h3 class="text-lg font-bold text-gray-800">20 Misiones Perinatales</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">
+            Abarca desde la preconcepción, tamizajes del I y II trimestre, preeclampsia, parto humanizado, atérmino y puerperio.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-[#F5E3DA] shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center text-2xl font-bold">📈</div>
+          <h3 class="text-lg font-bold text-gray-800">Monitor CTG en Vivo</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">
+            Simulador gráfico con trazado de Frecuencia Cardíaca Fetal (FCF) y trazado de Dinámica Uterina (contracciones).
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-[#F5E3DA] shadow-sm space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl font-bold">🔊</div>
+          <h3 class="text-lg font-bold text-gray-800">Simulador de Latidos</h3>
+          <p class="text-xs text-gray-500 leading-relaxed">
+            Lleva la experiencia clínica al aula activando el sonido de ultrasonido Doppler fetal para enriquecer el ambiente.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== WINDOW 2: PATIENTS GALLERY ==================== -->
+    <div id="view-patients" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-2xl font-extrabold text-gray-800">Salas de Gestantes y Expedientes Clínicos</h2>
+          <p class="text-xs text-gray-500">20 Historias clínicas con personajes y escenarios perinatales representativos.</p>
+        </div>
+        <span class="text-xs font-bold bg-[#FEF0EC] text-[#E05650] px-3.5 py-1.5 rounded-xl border border-[#FAC6B3]">
+          20 Expedientes Disponibles
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="patientsGrid"></div>
+    </div>
+
+    <!-- ==================== WINDOW 3: GAME ROOM ==================== -->
+    <div id="view-game" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-8 space-y-5">
+          <div class="bg-white rounded-3xl p-6 border border-[#F5E3DA] shadow-sm space-y-4 relative overflow-hidden">
+            
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <span id="missionBadge" class="bg-[#FEF0EC] text-[#E05650] border border-[#FAC6B3] text-xs font-black px-3 py-1 rounded-full tracking-wider uppercase">
+                MISIÓN 1 · PRECONCEPCIÓN
+              </span>
+
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">Progreso:</span>
+                <div class="w-28 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                  <div id="missionProgressBar" class="bg-gradient-to-r from-[#E05650] to-[#F59E0B] h-full w-5 transition-all duration-300"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SIMULATION CTG MONITOR BOX -->
+            <div class="bg-[#111A19] rounded-2xl p-4 text-white relative overflow-hidden space-y-2">
+              <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-wider">Monitor Cardiotocográfico (CTG)</span>
+                </div>
+                <div class="text-xs font-mono text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-800" id="ctgRate">
+                  FCF: 142 bpm · Variabilidad Normal
+                </div>
+              </div>
+
+              <div class="relative z-10">
+                <canvas id="ctgCanvas" class="w-full h-20"></canvas>
+              </div>
+
+              <div class="flex items-center justify-between relative z-10 pt-2 border-t border-emerald-900/60 flex-wrap gap-2">
+                <div class="flex items-center gap-3">
+                  <div id="sceneAvatarBox" class="w-12 h-12 rounded-2xl bg-emerald-900/40 border border-emerald-700/50 flex items-center justify-center text-3xl shrink-0">
+                    🤰🏻
+                  </div>
+                  <div>
+                    <h4 id="scenePatientName" class="text-sm font-bold text-white">Lucía V.</h4>
+                    <p id="sceneWeekText" class="text-[11px] text-emerald-300">Semana 12 de Gestación · Primigesta</p>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <span class="text-[10px] text-gray-400 block">Presión Arterial</span>
+                  <span id="sceneBPText" class="text-xs font-bold text-emerald-400 font-mono">115 / 75 mmHg</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+              <h2 id="missionTitle" class="text-2xl font-extrabold text-gray-800">
+                La primera consulta prenatal
+              </h2>
+              <p id="missionCopy" class="text-sm text-gray-600 leading-relaxed">
+                Una gestante acude a su primer control prenatal. Se observa ansiosa sobre las indicaciones iniciales. ¿Cuál es la intervención prioritaria?
+              </p>
+            </div>
+
+            <div id="choicesContainer" class="space-y-3 pt-2"></div>
+
+            <div id="feedbackBox" class="hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed transition-all"></div>
+
+            <div class="flex items-center justify-between pt-2">
+              <button id="prevBtn" onclick="prevMission()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-bold text-xs transition">
+                ← Misión Anterior
+              </button>
+              
+              <button id="nextBtn" onclick="nextMission()" class="hidden ml-auto bg-[#E05650] hover:bg-[#C9433D] text-white px-6 py-2.5 rounded-xl font-extrabold text-xs transition shadow-md">
+                Siguiente Misión →
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-5">
+          <div class="bg-white rounded-3xl p-5 border border-[#F5E3DA] shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-extrabold text-gray-800 flex items-center gap-2">
+                <span>👥</span> Jugadores & Marcador
+              </h3>
+              <button onclick="openWelcomeModal()" class="text-[10px] font-bold text-[#E05650] bg-[#FEF0EC] px-2.5 py-1 rounded-lg transition">
+                Editar Nombres
+              </button>
+            </div>
+
+            <div class="space-y-2.5" id="teamsScoreList"></div>
+
+            <div class="bg-orange-50 p-3 rounded-2xl border border-orange-100 text-[11px] text-orange-900 leading-snug">
+              💡 <strong>Dinámica Docente:</strong> Promuevan el consenso del equipo de turno antes de seleccionar la respuesta.
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-5 border border-[#F5E3DA] shadow-sm space-y-3">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Insignia de la Misión</h3>
+            
+            <div class="flex items-center gap-3 bg-[#FAF5F0] p-3.5 rounded-2xl border border-[#F5E3DA]">
+              <div id="badgeIcon" class="w-12 h-12 rounded-2xl bg-white text-2xl flex items-center justify-center shadow-sm shrink-0">
+                🌱
+              </div>
+              <div>
+                <h4 id="badgeName" class="text-sm font-bold text-gray-800">Primera Semilla</h4>
+                <p id="badgeText" class="text-xs text-gray-500">Responde la misión para desbloquear la insignia.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-emerald-50 rounded-3xl p-5 border border-emerald-100 space-y-2 text-emerald-900">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 text-emerald-800">
+              <span>📚</span> Principio Obstétrico
+            </h4>
+            <p class="text-xs leading-relaxed text-emerald-800">
+              Cada conducta médica y de enfermería perinatal debe priorizar la autonomía maternal, el consentimiento informado y las guías de evidencia actualizada.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== WINDOW 4: CLINICAL GUIDELINES ==================== -->
+    <div id="view-tools" class="tab-content hidden space-y-6">
+      <div class="border-b border-gray-200 pb-4">
+        <h2 class="text-2xl font-extrabold text-gray-800">Guías & Protocolos Perinatales</h2>
+        <p class="text-xs text-gray-500">Referencia rápida de consulta clínica para la toma de decisiones en obstetricia.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-3xl p-6 border border-[#F5E3DA] shadow-sm space-y-4 lg:col-span-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl font-bold">🤲</div>
+            <div>
+              <h3 class="text-lg font-extrabold text-gray-800">Guía de las 4 Maniobras de Leopold</h3>
+              <p class="text-xs text-gray-500">Palpación abdominal para determinar la estática fetal</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 text-xs">
+            <div class="bg-teal-50/60 p-3.5 rounded-2xl border border-teal-100 space-y-1">
+              <span class="bg-teal-200 text-teal-800 font-black text-[10px] px-2 py-0.5 rounded-md uppercase">1ª Maniobra</span>
+              <h4 class="font-extrabold text-gray-800 text-sm">Fondo Uterino</h4>
+              <p class="text-gray-600">Determina qué polo fetal ocupa el fondo uterino para estimar la <strong>situación fetal</strong>.</p>
+            </div>
+
+            <div class="bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 space-y-1">
+              <span class="bg-rose-200 text-rose-800 font-black text-[10px] px-2 py-0.5 rounded-md uppercase">2ª Maniobra</span>
+              <h4 class="font-extrabold text-gray-800 text-sm">Posición Fetal</h4>
+              <p class="text-gray-600">Palpación de los flancos maternos para ubicar el <strong>dorso fetal</strong> (derecho o izquierdo).</p>
+            </div>
+
+            <div class="bg-purple-50/60 p-3.5 rounded-2xl border border-purple-100 space-y-1">
+              <span class="bg-purple-200 text-purple-800 font-black text-[10px] px-2 py-0.5 rounded-md uppercase">3ª Maniobra</span>
+              <h4 class="font-extrabold text-gray-800 text-sm">Presentación Fetal</h4>
+              <p class="text-gray-600">Palpación por encima del pubis para identificar si la presentación es <strong>cefálica o pélvica</strong>.</p>
+            </div>
+
+            <div class="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-100 space-y-1">
+              <span class="bg-amber-200 text-amber-800 font-black text-[10px] px-2 py-0.5 rounded-md uppercase">4ª Maniobra</span>
+              <h4 class="font-extrabold text-gray-800 text-sm">Encajamiento</h4>
+              <p class="text-gray-600">Evaluación de la actitud fetal para confirmar el grado de <strong>encajamiento en la pelvis</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 border border-[#F5E3DA] shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold">👶🏻</div>
+            <div>
+              <h3 class="text-lg font-extrabold text-gray-800">Tabla de Criterios del Test de Apgar</h3>
+              <p class="text-xs text-gray-500">Evaluación del recién nacido al 1' y 5' minuto</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-purple-50 text-purple-900 border-b border-purple-200 font-bold">
+                  <th class="p-2">Signo</th>
+                  <th class="p-2">0 Puntos</th>
+                  <th class="p-2">1 Punto</th>
+                  <th class="p-2">2 Puntos</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 text-gray-700">
+                <tr>
+                  <td class="p-2 font-bold">A - Apariencia</td>
+                  <td class="p-2">Azul / Pálido</td>
+                  <td class="p-2">Acrocianosis</td>
+                  <td class="p-2">Completamente rosado</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold">P - Pulso</td>
+                  <td class="p-2">Ausente</td>
+                  <td class="p-2">&lt; 100 bpm</td>
+                  <td class="p-2">&gt; 100 bpm</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold">G - Gesto</td>
+                  <td class="p-2">Sin respuesta</td>
+                  <td class="p-2">Muecas leves</td>
+                  <td class="p-2">Llanto / Estornudo</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold">A - Actividad</td>
+                  <td class="p-2">Flácido</td>
+                  <td class="p-2">Flexión ligera</td>
+                  <td class="p-2">Movimiento activo</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold">R - Respiración</td>
+                  <td class="p-2">Ausente</td>
+                  <td class="p-2">Lenta, irregular</td>
+                  <td class="p-2">Llanto fuerte</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 border border-[#F5E3DA] shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl font-bold">🚨</div>
+            <div>
+              <h3 class="text-lg font-extrabold text-gray-800">Signos de Alarma Obstétrica</h3>
+              <p class="text-xs text-gray-500">Criterios de derivación o atención de urgencia</p>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div class="p-2.5 bg-rose-50 rounded-xl border border-rose-100 text-rose-900 font-medium">
+              🩸 <strong>Sangrado vaginal:</strong> Requiere evaluación ecográfica inmediata e inmunoprofilaxis si Rh(-).
+            </div>
+            <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-100 text-amber-900 font-medium">
+              🧠 <strong>Cefalea o epigastralgia:</strong> Descartar vasospasmo por Preeclampsia con Criterios de Severidad.
+            </div>
+            <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-100 text-blue-900 font-medium">
+              💧 <strong>Pérdida de líquido:</strong> Descartar Ruptura Prematura de Membranas (RPM).
+            </div>
+            <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-100 text-purple-900 font-medium">
+              👶 <strong>Disminución de movimientos fetales:</strong> Evaluación urgente con monitorización NST/CTG.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== WINDOW 5: PRIZES & CERTIFICATE ==================== -->
+    <div id="view-prizes" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-[#F5E3DA] shadow-sm space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 class="text-2xl font-extrabold text-gray-800">Galería de Nivelación e Insignias (20 Niveles)</h2>
+            <p class="text-xs text-gray-500">Completa cada una de las 20 misiones clínicas para desbloquear el diploma del equipo.</p>
+          </div>
+          
+          <div class="bg-[#FEF0EC] text-[#E05650] border border-[#FAC6B3] px-4 py-2 rounded-2xl text-xs font-black">
+            Nivel Alcanzado: <span id="currentLevelNumberText">0</span> / 20
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 pt-2" id="levelsBadgesGrid"></div>
+      </div>
+
+      <div class="bg-gradient-to-br from-[#FFF8F5] via-white to-[#FFEBE4] rounded-3xl p-8 border-2 border-[#E05650]/30 shadow-md text-center space-y-4 relative overflow-hidden">
+        <div class="max-w-xl mx-auto space-y-3">
+          <span class="text-5xl">📜</span>
+          <h3 class="text-2xl font-extrabold text-gray-800">Diploma de Excelencia en Atención Obstétrica</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">
+            Al responder de forma correcta las 20 misiones perinatales, se acreditará formalmente a los jugadores y equipos participantes en Toma de Decisiones y Cuidado Perinatal Humano.
+          </p>
+
+          <button id="downloadCertBtn" onclick="openCertificateModal()" disabled class="bg-gray-200 text-gray-400 cursor-not-allowed px-6 py-3.5 rounded-2xl font-extrabold text-xs transition shadow-sm">
+            🏆 Desbloquear Certificado Final (Completa las 20 misiones)
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-[#F5E3DA] py-6 mt-12 text-center text-xs text-gray-400">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p class="font-bold text-gray-600">Misión Bebé — Laboratorio Interactivo de Obstetricia y Perinatología</p>
+      <p>Modo Autónomo Offline para Simulación Académica y Aula de Salud Maternal.</p>
+    </div>
+  </footer>
+
+  <!-- MODALS -->
+  <div id="welcomeModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative border-2 border-[#E05650]/20 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeWelcomeModal()" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 font-bold text-xl w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">×</button>
+      <div class="text-center space-y-2">
+        <h2 class="text-2xl font-extrabold text-gray-800">¡Bienvenidos a Misión Bebé!</h2>
+        <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">Ingresen los nombres de los jugadores o de los equipos que participarán en la sesión clínica interactiva.</p>
+      </div>
+
+      <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-gray-700">¿Cuántos equipos o jugadores participan?</span>
+          <div class="flex bg-white p-1 rounded-xl border border-gray-200">
+            <button onclick="setTeamCount(2)" id="btnCountModal2" class="px-3 py-1 rounded-lg font-bold text-xs">2</button>
+            <button onclick="setTeamCount(3)" id="btnCountModal3" class="px-3 py-1 rounded-lg font-bold text-xs bg-[#E05650] text-white">3</button>
+            <button onclick="setTeamCount(4)" id="btnCountModal4" class="px-3 py-1 rounded-lg font-bold text-xs">4</button>
+          </div>
+        </div>
+        <div class="space-y-3 pt-2" id="modalPlayersInputs"></div>
+      </div>
+
+      <button onclick="saveTeamNamesAndStart()" class="w-full bg-[#E05650] hover:bg-[#C9433D] text-white py-3.5 rounded-2xl font-extrabold text-sm transition shadow-lg flex items-center justify-center gap-2">
+        <span>🚀</span> ¡Guardar e Iniciar Misiones!
+      </button>
+    </div>
+  </div>
+
+  <div id="patientModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closePatientModal()" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 font-bold text-xl w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">×</button>
+      <div class="flex items-center gap-3">
+        <div id="modalAvatarBox" class="w-14 h-14 rounded-2xl bg-orange-100 text-3xl flex items-center justify-center shrink-0">🤰🏻</div>
+        <div>
+          <span id="modalRoomLabel" class="text-[10px] font-black uppercase text-[#E05650] bg-[#FEF0EC] px-2.5 py-0.5 rounded-full">Habitación 01</span>
+          <h3 id="modalPatientName" class="text-xl font-extrabold text-gray-800">Lucía V.</h3>
+        </div>
+      </div>
+      <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 text-xs text-gray-600 space-y-1">
+        <p><strong>Edad Gestacional:</strong> <span id="modalWeeks">12 Semanas</span></p>
+        <p><strong>Motivo de Consulta:</strong> <span id="modalReason">Primera visita de control.</span></p>
+      </div>
+      <p id="modalDescription" class="text-xs text-gray-600 leading-relaxed">Descripción del caso...</p>
+      <div class="pt-2">
+        <button id="modalStartMissionBtn" class="w-full bg-[#E05650] hover:bg-[#C9433D] text-white py-3.5 rounded-xl font-extrabold text-xs transition shadow-md">
+          Resolver Misión Clínico-Obstétrica →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto">↻</div>
+      <h3 class="text-lg font-extrabold text-gray-800">¿Reiniciar Simulación?</h3>
+      <p class="text-xs text-gray-500">Se reiniciarán los puntajes, misiones completadas y el turno de los equipos.</p>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="closeResetModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-bold">Cancelar</button>
+        <button onclick="executeReset()" class="bg-[#E05650] hover:bg-[#C9433D] text-white py-2.5 rounded-xl text-xs font-extrabold">Sí, Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="certModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative text-center border-4 border-[#F59E0B]/40">
+      <button onclick="closeCertModal()" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 font-bold text-xl w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">×</button>
+      <div class="space-y-2">
+        <div class="text-5xl">🏆</div>
+        <span class="text-[10px] font-black uppercase text-[#F59E0B] tracking-widest bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Acreditación Perinatal</span>
+        <h2 class="text-3xl font-extrabold text-gray-800">CERTIFICADO DE RECONOCIMIENTO</h2>
+      </div>
+      <p class="text-xs text-gray-600 leading-relaxed px-4">
+        Se otorga el presente diploma de honor por haber resuelto con éxito las <strong>20 Misiones Obstétricas</strong> de la simulación "Misión Bebé".
+      </p>
+      <div class="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F5E3DA] space-y-2" id="certTeamsSummary"></div>
+      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-4 border-t border-gray-100">
+        <span>Misión Bebé — Laboratorio Perinatal</span>
+        <span>Código de Validación: PERI-OFFLINE-2026</span>
+      </div>
+      <button onclick="window.print()" class="w-full bg-[#10B981] hover:bg-[#0D9668] text-white py-3 rounded-xl font-extrabold text-xs transition shadow-md">
+        🖨️ Imprimir / Guardar Certificado
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const missions = [
+      {
+        id: 0,
+        label: 'MISIÓN 1 · PRECONCEPCIÓN',
+        title: 'Asesoría Preconcepcional',
+        copy: 'Una mujer de 28 años acude a consulta planeando un embarazo en los próximos meses. ¿Cuál es la indicación de suplementación preventiva prioritaria?',
+        emoji: '🌸',
+        patientName: 'Elena V. (Preconcepción)',
+        weeks: 'Consulta Preconcepcional',
+        bp: '118 / 72 mmHg',
+        options: [
+          { icon: '💊', title: 'Iniciar Ácido Fólico 0.4 mg/día de 1 a 3 meses antes', desc: 'Previene defectos del tubo neural (espina bífida y anencefalia) en la etapa embrionaria.', type: 'correct' },
+          { icon: '🥤', title: 'Indicar suplementos vitamínicos mega-dosis', desc: 'Prescribir polivitamínicos sin valoración clínica previa.', type: 'wrong' },
+          { icon: '⛔', title: 'Esperar a la confirmación de la prueba de embarazo', desc: 'Comenzar el ácido fólico cuando el tubo neural ya se ha cerrado.', type: 'wrong' }
+        ],
+        good: '¡Excelente decisión preventiva! El tubo neural fetal se cierra entre el día 21 y 28 post-concepción.',
+        why: 'Por eso el ácido fólico preconcepcional reduce hasta un 70% los defectos de cierre del tubo neural.',
+        badge: '🌱',
+        badgeName: 'Semilla Prevención'
+      },
+      {
+        id: 1,
+        label: 'MISIÓN 2 · PRIMER CONTROL',
+        title: 'Apertura de Carné Perinatal',
+        copy: 'Gestante de 8 semanas acude a su primera cita de control prenatal. Refiere náuseas leves y dudas sobre el calendario de controles.',
+        emoji: '🤰🏻',
+        patientName: 'Lucía V. (8 sem)',
+        weeks: 'Semana 8 de Gestación',
+        bp: '115 / 75 mmHg',
+        options: [
+          { icon: '📋', title: 'Apertura de Carné Perinatal, tamizaje y empatía', desc: 'Establecer relación de confianza, calcular FPP, solicitar exámenes de I trimestre.', type: 'correct' },
+          { icon: '🏃🏻‍♀️', title: 'Realizar la consulta en menos de 5 minutos', desc: 'Llenar datos apresuradamente sin explicar los signos de alarma.', type: 'wrong' },
+          { icon: '💉', title: 'Prescribir antieméticos fuertes de forma indiscriminada', desc: 'Medicar sin dar primero consejería nutricional.', type: 'wrong' }
+        ],
+        good: '¡Muy bien! Un control prenatal precoz y humanizado sienta las bases para un embarazo seguro.',
+        why: 'La OMS recomienda un mínimo de 8 controles prenatales con enfoque de derechos y prevención.',
+        badge: '🌷',
+        badgeName: 'Apertura Perinatal'
+      },
+      {
+        id: 2,
+        label: 'MISIÓN 3 · NUTRICIÓN & HIERRO',
+        title: 'Nutrición y Ganancia Ponderal',
+        copy: 'Paciente en la semana 14 con ligero descenso de hemoglobina (Hb: 10.8 g/dL). Pregunta cómo mejorar la absorción del hierro.',
+        emoji: '🥗',
+        patientName: 'Mariana G. (14 sem)',
+        weeks: 'Semana 14 de Gestación',
+        bp: '110 / 70 mmHg',
+        options: [
+          { icon: '🍊', title: 'Hierro con Vitamina C (cítricos) y evitar lácteos/té juntos', desc: 'Aumenta la biodisponibilidad del hierro ferroso.', type: 'correct' },
+          { icon: '☕', title: 'Tomar la pastilla de hierro junto al café del desayuno', desc: 'Los taninos y polifenoles disminuyen drásticamente la absorción.', type: 'wrong' },
+          { icon: '🚫', title: 'Suspender el hierro si siente ligera molestia gástrica', desc: 'Dejar el tratamiento sin ofrecer alternativas como fraccionar la dosis.', type: 'wrong' }
+        ],
+        good: '¡Acierto nutricional! La vitamina C convierte el hierro férrico en ferroso facilitando su absorción.',
+        why: 'Prevenir la anemia ferropénica reduce el riesgo de parto pretérmino y bajo peso al nacer.',
+        badge: '🥗',
+        badgeName: 'Nutrición Sana'
+      },
+      {
+        id: 3,
+        label: 'MISIÓN 4 · ECOGRAFÍA MORFOLÓGICA',
+        title: 'Tamizaje Ultrasonográfico de 11-14 sem',
+        copy: 'La gestante acude para su ecografía genética de primer trimestre. ¿Qué marcador ecográfico principal se mide para tamizaje de aneuploidías?',
+        emoji: '🔬',
+        patientName: 'Camila S. (12.5 sem)',
+        weeks: 'Semana 12.5 de Gestación',
+        bp: '112 / 74 mmHg',
+        options: [
+          { icon: '📏', title: 'Medición de la Translucencia Nucal (TN) y Hueso Nasal', desc: 'Marcadores clave para evaluar el riesgo de Síndrome de Down y cardiopatías.', type: 'correct' },
+          { icon: '🦶', title: 'Medición exclusiva del largo del pie fetal', desc: 'Parámetro no validado para tamizaje cromosómico.', type: 'wrong' },
+          { icon: '💧', title: 'Medición única del volumen del líquido amniótico', desc: 'El ILA se evalúa principalmente en el II y III trimestre.', type: 'wrong' }
+        ],
+        good: '¡Excelente precisión ecográfica! La combinación de TN, hueso nasal y bioquímica materna ofrece alta sensibilidad.',
+        why: 'Permite ofrecer asesoramiento genético oportuno a las familias.',
+        badge: '🔬',
+        badgeName: 'Genética Perinatal'
+      },
+      {
+        id: 4,
+        label: 'MISIÓN 5 · EVALUACIÓN OBSTÉTRICA',
+        title: 'Maniobras de Leopold y Altura Uterina',
+        copy: 'Gestante de 28 semanas acude a control de rutina. El profesional procede a evaluar la estática fetal abdominal.',
+        emoji: '🤲',
+        patientName: 'Rosa M. (28 sem)',
+        weeks: 'Semana 28 de Gestación',
+        bp: '120 / 78 mmHg',
+        options: [
+          { icon: '📐', title: 'Palpación de 4 Maniobras de Leopold y cinta métrica', desc: 'Determinar situación, posición, presentación y encajamiento fetal.', type: 'correct' },
+          { icon: '👁️', title: 'Estimar el peso fetal a simple vista', desc: 'Omitir la medición cuantitativa de la altura uterina.', type: 'wrong' },
+          { icon: '⚠️', title: 'Presionar bruscamente el abdomen sin explicar', desc: 'Realizar la palpación con manos frías y sin informar los pasos.', type: 'wrong' }
+        ],
+        good: '¡Palpación correcta! Las Maniobras de Leopold son fundamentales para la semiología obstétrica.',
+        why: 'Aportan datos sobre el crecimiento y la colocación fetal previa al parto.',
+        badge: '✨',
+        badgeName: 'Explorador Perinatal'
+      },
+      {
+        id: 5,
+        label: 'MISIÓN 6 · DIABETES GESTACIONAL',
+        title: 'Tamizaje con Prueba SOG (75g)',
+        copy: 'En la semana 25, la gestante se realiza la Prueba SOG (75g). El valor a las 2 horas es 156 mg/dL.',
+        emoji: '🧪',
+        patientName: 'Patricia H. (25 sem)',
+        weeks: 'Semana 25 de Gestación',
+        bp: '122 / 80 mmHg',
+        options: [
+          { icon: '📊', title: 'Diagnóstico de Diabetes Gestacional e inicio de dieta', desc: 'Criterio IADPSG: Un valor ≥ 153 mg/dL a las 2h confirma Diabetes Gestacional.', type: 'correct' },
+          { icon: '🍬', title: 'Considerar el valor como "normal por el embarazo"', desc: 'Desestimar el resultado y no realizar seguimiento.', type: 'wrong' },
+          { icon: '💉', title: 'Iniciar insulina a dosis altas de inmediato', desc: 'Omitir la primera línea terapéutica basada en cambios de estilo de vida.', type: 'wrong' }
+        ],
+        good: '¡Diagnóstico oportuno! El control metabólico previene complicaciones como la macrosomía.',
+        why: 'El abordaje nutricional inicial logra controlar la glucemia en más del 80% de los casos.',
+        badge: '🧪',
+        badgeName: 'Control Metabólico'
+      },
+      {
+        id: 6,
+        label: 'MISIÓN 7 · FACTOR Rh & IMMUNOGLOBULINA',
+        title: 'Gestante Rh Negativa no Sensibilizada',
+        copy: 'Gestante Rh (-) con Coombs indirecto negativo alcanza la semana 28. El padre es Rh (+). ¿Qué conducta corresponde?',
+        emoji: '🩸',
+        patientName: 'Carmen L. (28 sem)',
+        weeks: 'Semana 28 de Gestación',
+        bp: '116 / 74 mmHg',
+        options: [
+          { icon: '💉', title: 'Administrar Inmunoglobulina Anti-D (300 mcg) a las 28 semanas', desc: 'Previene la isoinmunización Rh durante el tercer trimestre.', type: 'correct' },
+          { icon: '🚫', title: 'No aplicar nada hasta después del nacimiento', desc: 'Arriesgar la producción de anticuerpos maternos.', type: 'wrong' },
+          { icon: '🧪', title: 'Indicar transfusión sanguínea profiláctica', desc: 'Procedimiento innecesario sin anemia fetal demostrada.', type: 'wrong' }
+        ],
+        good: '¡Excelente inmunoprofilaxis! La gammaglobulina anti-D neutraliza eritrocitos fetales Rh(+).',
+        why: 'Esta medida reduce la enfermedad hemolítica del recién nacido a cifras mínimas.',
+        badge: '🛡️',
+        badgeName: 'Protección Anti-D'
+      },
+      {
+        id: 7,
+        label: 'MISIÓN 8 · PREECLAMPSIA Y ALERTAS',
+        title: 'Signos de Alarma y Crisis Hipertensiva',
+        copy: 'Gestante de 32 semanas consulta por cefalea pulsátil intensa, tinnitus y epigastralgia. PA: 165/110 mmHg.',
+        emoji: '🚨',
+        patientName: 'Valeria C. (32 sem)',
+        weeks: 'Semana 32 de Gestación',
+        bp: '165 / 110 mmHg (ALERTA)',
+        options: [
+          { icon: '🚑', title: 'Alerta Triaje I, Labetalol/Hidralazina y Sulfato de Magnesio', desc: 'Hospitalización urgente, antihipertensivo EV y neuroprotección materna con MgSO4.', type: 'correct' },
+          { icon: '☕', title: 'Recomendar reposo en cama y té relajante', desc: 'Omitir la gravedad de la preeclampsia severa.', type: 'wrong' },
+          { icon: '💊', title: 'Indicar Paracetamol e ir a casa', desc: 'Tratar la cefalea sin atender la emergencia hipertensiva.', type: 'wrong' }
+        ],
+        good: '¡Intervención salvavidas! La hipertensión severa requiere control hemodinámico urgente.',
+        why: 'El Sulfato de Magnesio es el fármaco de elección para prevenir y tratar las convulsiones eclámpticas.',
+        badge: '🚨',
+        badgeName: 'Guardián del Triaje'
+      },
+      {
+        id: 8,
+        label: 'MISIÓN 9 · AMENAZA DE PARTO PRETÉRMINO',
+        title: 'Maduración Pulmonar Fetal y Tocolisis',
+        copy: 'Gestante de 30 semanas ingresa con dinámicas uterinas frecuentes y borramiento cervical del 50%. ¿Qué medida es prioritaria?',
+        emoji: '🏥',
+        patientName: 'Sofía D. (30 sem)',
+        weeks: 'Semana 30 de Gestación',
+        bp: '118 / 76 mmHg',
+        options: [
+          { icon: '💉', title: 'Iniciar Corticoides antenatales (Betametasona) y Tocolítico', desc: 'Acelera la producción de surfactante pulmonar fetal.', type: 'correct' },
+          { icon: '🚶🏻‍♀️', title: 'Indicar caminatas para apresurar el nacimiento', desc: 'Favorecer el nacimiento prematuro sin maduración previa.', type: 'wrong' },
+          { icon: '🧊', title: 'Aplicar hielo abdominal sin medicación', desc: 'Medida ineficaz para frenar la dinámica uterina.', type: 'wrong' }
+        ],
+        good: '¡Protección pulmonar lograda! La Betametasona reduce drásticamente el síndrome de distrés respiratorio.',
+        why: 'Los tocolíticos permiten diferir el parto 48 horas para completar el esquema corticoide.',
+        badge: '🫁',
+        badgeName: 'Maduración Pulmonar'
+      },
+      {
+        id: 9,
+        label: 'MISIÓN 10 · INFECCIÓN URINARIA (ITU)',
+        title: 'Tamizaje y Tratamiento de ITU',
+        copy: 'En el examen de orina de rutina a las 20 semanas se detecta bacteriuria asintomática (> 100.000 UFC/mL de E. coli).',
+        emoji: '🧫',
+        patientName: 'Andrea R. (20 sem)',
+        weeks: 'Semana 20 de Gestación',
+        bp: '114 / 72 mmHg',
+        options: [
+          { icon: '💊', title: 'Tratar la bacteriuria según antibiograma seguro en embarazo', desc: 'En la gestante, la bacteriuria asintomática SIEMPRE se trata para prevenir pielonefritis.', type: 'correct' },
+          { icon: '🙈', title: 'No tratar por no presentar síntomas de disuria', desc: 'Ignorar la bacteriuria, aumentando el riesgo de sepsis urinaria.', type: 'wrong' },
+          { icon: '🧪', title: 'Indicar antibióticos contraindicados (quinolonas)', desc: 'Usar medicamentos con potencial daño fetal.', type: 'wrong' }
+        ],
+        good: '¡Tratamiento acertado! Los cambios anatómicos y hormonales facilitan el ascenso bacteriano.',
+        why: 'Tratar la bacteriuria asintomática reduce significativamente la incidencia de pielonefritis aguda.',
+        badge: '🧫',
+        badgeName: 'Salud Renal'
+      },
+      {
+        id: 10,
+        label: 'MISIÓN 11 · SALUD MENTAL PERINATAL',
+        title: 'Acompañamiento y Bienestar Emocional',
+        copy: 'Una usuaria en su III trimestre manifiesta temor abrumador al dolor del parto y falta de apoyo.',
+        emoji: '💗',
+        patientName: 'Gisela P. (34 sem)',
+        weeks: 'Semana 34 de Gestación',
+        bp: '124 / 82 mmHg',
+        options: [
+          { icon: '🫶', title: 'Escucha activa, validación emocional y psicoprofilaxis', desc: 'Ofrecer contención, explicar la analgesia e integrar acompañante.', type: 'correct' },
+          { icon: '🤐', title: 'Decirle "no llore, todas las mujeres paren y no pasa nada"', desc: 'Invalidar sus emociones y aumentar su ansiedad.', type: 'wrong' },
+          { icon: '💊', title: 'Prescribir sedantes sin evaluación psicológica', desc: 'Medicar la ansiedad sin ofrecer primero un espacio de escucha.', type: 'wrong' }
+        ],
+        good: '¡Gran calidez humana! Cuidar la salud mental perinatal favorece el vínculo madre-bebé.',
+        why: 'La psicoprofilaxis obstétrica prepara físicamente y emocionalmente a la familia.',
+        badge: '💞',
+        badgeName: 'Corazón Empático'
+      },
+      {
+        id: 11,
+        label: 'MISIÓN 12 · PLAN DE PARTO',
+        title: 'Derechos y Parto Humanizado',
+        copy: 'La gestante presenta su Plan de Parto solicitando estar acompañada por su pareja y libre movimiento durante el trabajo de parto.',
+        emoji: '📜',
+        patientName: 'Ana & Juan (37 sem)',
+        weeks: 'Semana 37 de Gestación',
+        bp: '118 / 76 mmHg',
+        options: [
+          { icon: '🤝', title: 'Aceptar el Plan de Parto y promover la libre posición', desc: 'Respetar los derechos de la gestante, fomentar la movilidad e hidratación.', type: 'correct' },
+          { icon: '🚫', title: 'Prohibir acompañante y obligar la posición acostada', desc: 'Imponer posición de litotomía sin justificación clínica.', type: 'wrong' },
+          { icon: '✂️', title: 'Indicar episiotomía de rutina a todas las primigestas', desc: 'Práctica desaconsejada de manera sistemática por la OMS.', type: 'wrong' }
+        ],
+        good: '¡Respeto a los derechos perinatales! El acompañamiento continuo reduce la necesidad de intervenciones.',
+        why: 'El parto humanizado posiciona a la mujer y su recién nacido en el centro de la atención.',
+        badge: '👑',
+        badgeName: 'Parto Humanizado'
+      },
+      {
+        id: 12,
+        label: 'MISIÓN 13 · MONITOREO CTG INTRAPARTO',
+        title: 'Interpretación de Desaceleraciones',
+        copy: 'El registro CTG muestra desaceleraciones de la FCF que inician y terminan junto con la contracción (DIP I / Tempranas).',
+        emoji: '📈',
+        patientName: 'Paola F. (39 sem · T. Parto)',
+        weeks: 'Semana 39 · Dilatación 6 cm',
+        bp: '120 / 75 mmHg',
+        options: [
+          { icon: '✅', title: 'Identificar como desaceleración precoz por compresión cefálica', desc: 'Reflejo vagal secundario a la presión de la cabeza fetal en el cérvix.', type: 'correct' },
+          { icon: '🚨', title: 'Diagnosticar sufrimiento fetal y llevar a cesárea urgente', desc: 'Confundir un DIP I fisiológico con un DIP II por hipoxia.', type: 'wrong' },
+          { icon: '💉', title: 'Aumentar la dosis de oxitocina al máximo', desc: 'Hiperestimular el útero sin indicación obstétrica.', type: 'wrong' }
+        ],
+        good: '¡Excelente lectura del CTG! El DIP I o desaceleración temprana coincide con la contracción y es benigno.',
+        why: 'Conocer la diferencia con las desaceleraciones tardías evita intervenciones innecesarias.',
+        badge: '📈',
+        badgeName: 'Experto en CTG'
+      },
+      {
+        id: 13,
+        label: 'MISIÓN 14 · TRABAJO DE PARTO',
+        title: 'Atención del Segundo Periodo (Expulsivo)',
+        copy: 'La gestante alcanza dilatación completa (10 cm) y siente deseos involuntarios de pujar (Reflejo de Ferguson).',
+        emoji: '👶🏻',
+        patientName: 'Lorena T. (39.5 sem)',
+        weeks: 'Dilatación Completa (10 cm)',
+        bp: '122 / 78 mmHg',
+        options: [
+          { icon: '🌬️', title: 'Guiar pujos espontáneos respetando los ritmos maternos', desc: 'Apoyar en posiciones confortables y proteger el periné.', type: 'correct' },
+          { icon: '🛑', title: 'Indicar pujos dirigidos con apnea prolongada', desc: 'Los pujos dirigidos en Valsalva pueden reducir la oxigenación fetal.', type: 'wrong' },
+          { icon: '🤼', title: 'Realizar compresión del fondo uterino (Kristeller)', desc: 'Maniobra CONTRAINDICADA por elevado riesgo de ruptura uterina.', type: 'wrong' }
+        ],
+        good: '¡Parto respetado y seguro! Evitar la maniobra de Kristeller preserva la integridad del fondo uterino.',
+        why: 'Los pujos espontáneos con glotis abierta protegen el suelo pélvico materno.',
+        badge: '🌊',
+        badgeName: 'Guía del Expulsivo'
+      },
+      {
+        id: 14,
+        label: 'MISIÓN 15 · DISTOCIA DE HOMBROS',
+        title: 'Manejo de Emergencia en Distocia',
+        copy: 'Tras la salida de la cabeza fetal, esta se retráctil fuertemente contra el periné ("Signo de la Tortuga").',
+        emoji: '⚠️',
+        patientName: 'Bebé de Beatriz (Macrosómico)',
+        weeks: 'Parto en Curso · Expulsivo',
+        bp: '125 / 80 mmHg',
+        options: [
+          { icon: '🧘🏻‍♀️', title: 'Maniobra de McRoberts y Presión Suprapúbica', desc: 'Hiperflexionar muslos maternos y aplicar presión suprapúbica para desimpactar el hombro.', type: 'correct' },
+          { icon: '🚜', title: 'Traccionar con fuerza la cabeza fetal hacia abajo', desc: 'Riesgo severo de lesión del plexo braquial.', type: 'wrong' },
+          { icon: '🤰', title: 'Realizar presión sobre el fondo del útero', desc: 'La presión fúndica empeora la impactación del hombro.', type: 'wrong' }
+        ],
+        good: '¡Maniobra salvadora! McRoberts aplana la lordosis lumbar facilitando el desprendimiento.',
+        why: 'Recuerde la mnemotecnia HELPERR para el manejo de la distocia de hombros.',
+        badge: '⚡',
+        badgeName: 'Resolución de Distocias'
+      },
+      {
+        id: 15,
+        label: 'MISIÓN 16 · NACIMIENTO & APEGO',
+        title: 'Contacto Piel a Piel y Clampeo Tardío',
+        copy: 'Nace recién nacido a término, llora fuertemente y tiene buen tono muscular. ¿Cuál es el manejo inmediato?',
+        emoji: '🤱🏻',
+        patientName: 'Recién Nacido de Isabel',
+        weeks: 'Minuto 0 de Nacimiento',
+        bp: 'Adaptación Fisiológica',
+        options: [
+          { icon: '❤️', title: 'Contacto Piel a Piel directo y Clampeo Tardío (1-3 min)', desc: 'Colocar sobre el pecho materno, secar suavemente y posponer corte del cordón.', type: 'correct' },
+          { icon: '✂️', title: 'Cortar el cordón inmediatamente en el segundo 5', desc: 'Priva al recién nacido de reservas sanguíneas ricas en hierro.', type: 'wrong' },
+          { icon: '🏃🏻‍♂️', title: 'Llevar de inmediato a la cuna radiante para pesarlo', desc: 'Interrumpir el contacto piel a piel en un recién nacido vigoroso.', type: 'wrong' }
+        ],
+        good: '¡Apego precoz garantizado! El clampeo oportuno aumenta las reservas de hierro en los primeros 6 meses.',
+        why: 'El contacto piel a piel regula la temperatura y promueve la lactancia materna.',
+        badge: '🤱🏻',
+        badgeName: 'Apego Precoz'
+      },
+      {
+        id: 16,
+        label: 'MISIÓN 17 · ADAPTACIÓN NEONATAL',
+        title: 'Evaluación del Test de Apgar al 1\' y 5\'',
+        copy: 'Al primer minuto: cuerpo rosado con cianosis distal (1), FC 130 (2), llanto fuerte (2), flexión activa (2), estornudo al aspirar (2).',
+        emoji: '👶🏻',
+        patientName: 'Recién Nacido de Camila',
+        weeks: '1er Minuto de Vida',
+        bp: 'Evaluación Apgar',
+        options: [
+          { icon: '⭐', title: 'Puntaje de Apgar: 9 / 10 (Adaptación Óptima)', desc: 'Sumatoria: 1 (color) + 2 (pulso) + 2 (gesto) + 2 (actividad) + 2 (respiración) = 9.', type: 'correct' },
+          { icon: '❓', title: 'Puntaje de Apgar: 5 / 10 (Moderado)', desc: 'Error en la suma de los componentes del test.', type: 'wrong' },
+          { icon: '🚨', title: 'Iniciar maniobras de Reanimación Avanzada', desc: 'Confundir acrocianosis fisiológica con asfixia neonatal.', type: 'wrong' }
+        ],
+        good: '¡Cálculo Apgar exacto! Un Apgar de 9 refleja una excelente transición fisiológica.',
+        why: 'La acrocianosis es un hallazgo normal en las primeras horas de vida.',
+        badge: '⭐',
+        badgeName: 'Evaluador Neonatal'
+      },
+      {
+        id: 17,
+        label: 'MISIÓN 18 · PUERPERIO & HEMORRAGIA',
+        title: 'Manejo Activo del Tercer Periodo',
+        copy: 'Tras la salida del recién nacido, se procede al alumbramiento. ¿Qué medida disminuye el riesgo de Hemorragia Posparto (HPP)?',
+        emoji: '🩸',
+        patientName: 'Elena F. (Alumbramiento)',
+        weeks: 'Puerperio Inmediato',
+        bp: '115 / 75 mmHg',
+        options: [
+          { icon: '💉', title: 'Manejo Activo: Oxitocina 10 UI IM y Tracción Controlada', desc: 'Administrar oxitocina tras la salida del recién nacido.', type: 'correct' },
+          { icon: '🚜', title: 'Traccionar el cordón con fuerza sin contra-presión', desc: 'Riesgo de Inversión Uterina masiva.', type: 'wrong' },
+          { icon: '⏳', title: 'Esperar más de 1 hora sin vigilar el sangrado', desc: 'Aumentar la probabilidad de atonía uterina inadvertida.', type: 'wrong' }
+        ],
+        good: '¡Prevención de hemorragia! El manejo activo reduce en más del 60% la hemorragia posparto.',
+        why: 'Palpar el "Globo de Seguridad de Pinard" (útero firme) confirma la efectividad.',
+        badge: '🩸',
+        badgeName: 'Prevención HPP'
+      },
+      {
+        id: 18,
+        label: 'MISIÓN 19 · LACTANCIA MATERNA',
+        title: 'Acople Profundo y Calostro',
+        copy: 'En el puerperio, la madre refiere dolor en los pezones al amamantar a las 12 horas del nacimiento. ¿Qué aspecto debe corregirse?',
+        emoji: '🥛',
+        patientName: 'Sofía & Bebé (12h Posparto)',
+        weeks: 'Puerperio Inmediato',
+        bp: '110 / 70 mmHg',
+        options: [
+          { icon: '👅', title: 'Evaluar y corregir el acople: labio evertido y areola dentro', desc: 'El dolor sostenido suele indicar agarre superficial del pezón.', type: 'correct' },
+          { icon: '🍼', title: 'Suspender el pecho y dar biberón con fórmula', desc: 'Interrumpir la lactancia en lugar de corregir la técnica.', type: 'wrong' },
+          { icon: '⏳', title: 'Decirle que "el dolor es normal y hay que aguantarlo"', desc: 'Normalizar las grietas en el pezón conduciendo al abandono precoz.', type: 'wrong' }
+        ],
+        good: '¡Asesoría en lactancia exitosa! La lactancia no debe doler con un acople adecuado.',
+        why: 'El calostro provee las primeras inmunoglobulinas (IgA) e hidratación óptima.',
+        badge: '🥛',
+        badgeName: 'Promotor Lactancia'
+      },
+      {
+        id: 19,
+        label: 'MISIÓN 20 · PUERPERIO TARDÍO & ALTA',
+        title: 'Control Posnatal y Anticoncepción',
+        copy: 'A los 7 días posparto, la madre acude a su primer control del puerperio. ¿Qué aspectos integrales deben evaluarse?',
+        emoji: '🌟',
+        patientName: 'Valeria & Bebé (7 días)',
+        weeks: 'Puerperio Tardío',
+        bp: '118 / 74 mmHg',
+        options: [
+          { icon: '🩺', title: 'Loquios, involución uterina, cicatriz, lactancia y salud mental', desc: 'Valoración integral de la recuperación física y emocional materna.', type: 'correct' },
+          { icon: '📋', title: 'Revisar únicamente el peso del bebé e ignorar a la madre', desc: 'Desatender la salud de la puérpera.', type: 'wrong' },
+          { icon: '💊', title: 'Indicar anticonceptivos con estrógenos en la lactancia', desc: 'Los estrógenos pueden reducir la producción de leche materna.', type: 'wrong' }
+        ],
+        good: '¡Misión 20 completada! La atención posnatal integral consolida la salud del binomio madre-hijo.',
+        why: 'Felicidades a todos por completar satisfactoriamente las 20 Misiones de Obstetricia.',
+        badge: '🏆',
+        badgeName: 'Leyenda Perinatal'
+      }
+    ];
+
+    const levelTitles = [
+      'Inicial', 'Apertura', 'Nutricional', 'Genético', 'Explorador',
+      'Metabólico', 'Inmunológico', 'Triaje Crítico', 'Pulmonar', 'Renal',
+      'Empático', 'Humanizado', 'Analista CTG', 'Guía Expulsivo', 'Distocias',
+      'Apego Precoz', 'Neonatal', 'Protector HPP', 'Promotor Lactancia', 'Leyenda Perinatal'
+    ];
+
+    let teams = [
+      { id: 1, name: 'Equipo Matronas', players: 'Jugador 1', avatar: '👩‍⚕️', score: 0 },
+      { id: 2, name: 'Equipo Latidos', players: 'Jugador 2', avatar: '🩺', score: 0 },
+      { id: 3, name: 'Equipo Vida', players: 'Jugador 3', avatar: '🌱', score: 0 },
+      { id: 4, name: 'Equipo Abrazo', players: 'Jugador 4', avatar: '🤱', score: 0 }
+    ];
+
+    let currentTeamIndex = 0;
+    let numActiveTeams = 3;
+    let currentMissionIdx = 0;
+    let completedMissions = new Set();
+    let isSoundOn = true;
+    let isDopplerOn = false;
+    let audioCtx = null;
+    let dopplerTimer = null;
+
+    window.onload = function() {
+      renderTeamInputs();
+      renderPatientsGrid();
+      renderTeamsScoreboard();
+      renderLevelBadges();
+      loadMission(0);
+      initCtgCanvas();
+    };
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!isSoundOn) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+
+        if (type === 'correct') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(170, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(650, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.start(now);
+          osc.stop(now + 0.06);
+        } else if (type === 'fanfare') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.12);
+          osc.frequency.setValueAtTime(783.99, now + 0.24);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        }
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      isSoundOn = !isSoundOn;
+      document.getElementById('soundStatusText').textContent = isSoundOn ? 'Efectos: ON' : 'Efectos: OFF';
+      document.getElementById('soundIcon').textContent = isSoundOn ? '🔊' : '🔇';
+      if (isSoundOn) playSound('click');
+    }
+
+    function toggleDoppler() {
+      isDopplerOn = !isDopplerOn;
+      const btnText = document.getElementById('dopplerText');
+      const btnIcon = document.getElementById('dopplerIcon');
+      if (isDopplerOn) {
+        btnText.textContent = 'Doppler: ON';
+        btnIcon.textContent = '💓';
+        startDopplerBeats();
+      } else {
+        btnText.textContent = 'Doppler: OFF';
+        btnIcon.textContent = '❤️';
+        stopDopplerBeats();
+      }
+    }
+
+    function startDopplerBeats() {
+      if (dopplerTimer) clearInterval(dopplerTimer);
+      dopplerTimer = setInterval(() => {
+        if (!isDopplerOn) return;
+        try {
+          const ctx = getAudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(140, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        } catch(e){}
+      }, 428);
+    }
+
+    function stopDopplerBeats() {
+      if (dopplerTimer) clearInterval(dopplerTimer);
+    }
+
+    function switchTab(tabId) {
+      playSound('click');
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const targetView = document.getElementById('view-' + tabId);
+      const targetBtn = document.getElementById('tab-' + tabId);
+
+      if (targetView) targetView.classList.remove('hidden');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      if (tabId === 'game') {
+        initCtgCanvas();
+      }
+    }
+
+    function openWelcomeModal() {
+      playSound('click');
+      renderModalPlayerInputs();
+      const modal = document.getElementById('welcomeModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeWelcomeModal() {
+      const modal = document.getElementById('welcomeModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setTeamCount(count) {
+      playSound('click');
+      numActiveTeams = count;
+
+      [2, 3, 4].forEach(n => {
+        const btnH = document.getElementById(`btnCountHome${n}`);
+        const btnM = document.getElementById(`btnCountModal${n}`);
+        
+        const activeClass = "px-3 py-1 rounded-lg font-bold text-xs bg-[#E05650] text-white shadow-sm";
+        const inactiveClass = "px-3 py-1 rounded-lg font-bold text-xs text-gray-500";
+
+        if (btnH) btnH.className = (n === count) ? activeClass : inactiveClass;
+        if (btnM) btnM.className = (n === count) ? activeClass : inactiveClass;
+      });
+
+      renderTeamInputs();
+      renderModalPlayerInputs();
+      renderTeamsScoreboard();
+    }
+
+    function renderModalPlayerInputs() {
+      const container = document.getElementById('modalPlayersInputs');
+      if (!container) return;
+      container.innerHTML = '';
+      const avatars = ['👩‍⚕️', '🩺', '🌱', '🤱'];
+
+      for (let i = 0; i < numActiveTeams; i++) {
+        const t = teams[i];
+        const card = document.createElement('div');
+        card.className = 'bg-white p-3.5 rounded-2xl border border-gray-200 space-y-2 shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-[#E05650] flex items-center gap-1.5">
+              <span>${avatars[i]}</span> Equipo ${i + 1}
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 block mb-0.5">Nombre del Equipo:</label>
+              <input type="text" id="modalInputTeamName${i}" value="${t.name}" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 block mb-0.5">Nombre de Jugadores:</label>
+              <input type="text" id="modalInputPlayers${i}" value="${t.players}" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-bold text-gray-800">
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function renderTeamInputs() {
+      const container = document.getElementById('teamInputGridHome');
+      if (!container) return;
+      container.innerHTML = '';
+      const avatars = ['👩‍⚕️', '🩺', '🌱', '🤱'];
+
+      for (let i = 0; i < numActiveTeams; i++) {
+        const t = teams[i];
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2.5';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-[#E05650]">Equipo 0${i + 1}</span>
+            <span class="text-xl">${avatars[i]}</span>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-400 block mb-1">Nombre del Equipo:</label>
+            <input type="text" id="homeInputTeamName${i}" value="${t.name}" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold text-gray-800">
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-400 block mb-1">Jugador(es):</label>
+            <input type="text" id="homeInputPlayers${i}" value="${t.players}" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold text-gray-800">
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function saveTeamNamesAndStart() {
+      playSound('click');
+      for (let i = 0; i < numActiveTeams; i++) {
+        const mName = document.getElementById(`modalInputTeamName${i}`);
+        const mPlayers = document.getElementById(`modalInputPlayers${i}`);
+        const hName = document.getElementById(`homeInputTeamName${i}`);
+        const hPlayers = document.getElementById(`homeInputPlayers${i}`);
+
+        if (mName && mName.value.trim()) teams[i].name = mName.value.trim();
+        else if (hName && hName.value.trim()) teams[i].name = hName.value.trim();
+
+        if (mPlayers && mPlayers.value.trim()) teams[i].players = mPlayers.value.trim();
+        else if (hPlayers && hPlayers.value.trim()) teams[i].players = hPlayers.value.trim();
+      }
+
+      closeWelcomeModal();
+      renderTeamsScoreboard();
+      switchTab('game');
+    }
+
+    function renderTeamsScoreboard() {
+      const list = document.getElementById('teamsScoreList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      for (let i = 0; i < numActiveTeams; i++) {
+        const team = teams[i];
+        const isActive = i === currentTeamIndex;
+        const pill = document.createElement('div');
+        pill.className = `p-3 rounded-2xl border transition flex items-center justify-between ${
+          isActive ? 'bg-[#FEF0EC] border-[#E05650] shadow-sm' : 'bg-gray-50 border-gray-100 opacity-80'
+        }`;
+
+        pill.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full ${isActive ? 'bg-[#E05650] animate-ping' : 'bg-gray-300'}"></span>
+            <div>
+              <p class="text-xs font-extrabold text-gray-800 truncate max-w-[130px]">${team.avatar} ${team.name}</p>
+              <p class="text-[10px] text-gray-500 truncate max-w-[130px]">👤 ${team.players}</p>
+            </div>
+          </div>
+          <span class="text-xs font-black text-gray-800">${team.score} PTS</span>
+        `;
+        list.appendChild(pill);
+      }
+
+      document.getElementById('statTurnTeam').textContent = teams[currentTeamIndex].name;
+    }
+
+    function loadMission(index) {
+      currentMissionIdx = index;
+      const m = missions[index];
+
+      document.getElementById('missionBadge').textContent = m.label;
+      document.getElementById('missionTitle').textContent = m.title;
+      document.getElementById('missionCopy').textContent = m.copy;
+      document.getElementById('sceneAvatarBox').textContent = m.emoji;
+      document.getElementById('scenePatientName').textContent = m.patientName;
+      document.getElementById('sceneWeekText').textContent = m.weeks;
+      document.getElementById('sceneBPText').textContent = m.bp;
+
+      document.getElementById('statMissionNumber').textContent = `${index + 1} / ${missions.length}`;
+      const pct = ((index + 1) / missions.length) * 100;
+      document.getElementById('missionProgressBar').style.width = pct + '%';
+
+      document.getElementById('badgeIcon').textContent = m.badge;
+      document.getElementById('badgeName').textContent = m.badgeName;
+      
+      const isAlreadyDone = completedMissions.has(index);
+      document.getElementById('badgeText').textContent = isAlreadyDone ? 'Insignia Obtenida' : 'Responde correctamente para desbloquearla.';
+
+      const container = document.getElementById('choicesContainer');
+      container.innerHTML = '';
+
+      const feedbackBox = document.getElementById('feedbackBox');
+      feedbackBox.className = 'hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed transition-all';
+      feedbackBox.innerHTML = '';
+
+      m.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn w-full text-left p-4 rounded-2xl border border-gray-200 bg-white hover:border-[#E05650] transition flex items-start gap-3 text-xs sm:text-sm';
+        
+        if (isAlreadyDone) {
+          btn.disabled = true;
+          btn.classList.add('opacity-75');
+        }
+
+        btn.innerHTML = `
+          <span class="text-2xl shrink-0 p-1.5 bg-gray-50 rounded-xl">${opt.icon}</span>
+          <div>
+            <strong class="block font-bold text-gray-800 text-sm mb-0.5">${opt.title}</strong>
+            <span class="text-gray-500 text-xs leading-snug">${opt.desc}</span>
+          </div>
+        `;
+
+        btn.onclick = () => handleChoice(idx, btn);
+        container.appendChild(btn);
+      });
+
+      document.getElementById('prevBtn').classList.toggle('hidden', index === 0);
+      document.getElementById('nextBtn').classList.toggle('hidden', !isAlreadyDone);
+      document.getElementById('nextBtn').textContent = index === missions.length - 1 ? '🏆 Ver Resultado Final' : 'Siguiente Misión →';
+    }
+
+    function handleChoice(optionIdx, btnElement) {
+      const m = missions[currentMissionIdx];
+      const opt = m.options[optionIdx];
+      const feedbackBox = document.getElementById('feedbackBox');
+
+      if (opt.type === 'correct') {
+        playSound('correct');
+        completedMissions.add(currentMissionIdx);
+        teams[currentTeamIndex].score += 100;
+
+        feedbackBox.className = 'p-4 rounded-2xl text-xs sm:text-sm leading-relaxed bg-emerald-50 border border-emerald-200 text-emerald-900 block space-y-1';
+        feedbackBox.innerHTML = `
+          <p class="font-extrabold text-sm text-emerald-800">${m.good}</p>
+          <p class="text-xs text-emerald-700">${m.why}</p>
+        `;
+
+        btnElement.classList.remove('bg-white', 'border-gray-200');
+        btnElement.classList.add('bg-emerald-50', 'border-emerald-400');
+
+        const allBtns = document.getElementById('choicesContainer').querySelectorAll('button');
+        allBtns.forEach(b => b.disabled = true);
+
+        currentTeamIndex = (currentTeamIndex + 1) % numActiveTeams;
+        updateGlobalStats();
+        renderTeamsScoreboard();
+
+        document.getElementById('nextBtn').classList.remove('hidden');
+
+        if (completedMissions.size === missions.length) {
+          playSound('fanfare');
+        }
+      } else {
+        playSound('wrong');
+        feedbackBox.className = 'p-4 rounded-2xl text-xs sm:text-sm leading-relaxed bg-amber-50 border border-amber-200 text-amber-900 block space-y-1';
+        feedbackBox.innerHTML = `
+          <p class="font-bold text-xs">💡 Orientación Obstétrica:</p>
+          <p class="text-xs text-amber-800">Revisen nuevamente los protocolos clínicos y prioricen la seguridad del binomio madre-hijo.</p>
+        `;
+
+        btnElement.classList.remove('bg-white');
+        btnElement.classList.add('bg-amber-50', 'border-amber-300');
+      }
+    }
+
+    function nextMission() {
+      playSound('click');
+      if (currentMissionIdx < missions.length - 1) {
+        loadMission(currentMissionIdx + 1);
+      } else {
+        switchTab('prizes');
+      }
+    }
+
+    function prevMission() {
+      playSound('click');
+      if (currentMissionIdx > 0) {
+        loadMission(currentMissionIdx - 1);
+      }
+    }
+
+    function updateGlobalStats() {
+      const totalPoints = teams.reduce((acc, t) => acc + t.score, 0);
+      document.getElementById('globalPoints').textContent = `${totalPoints} PTS`;
+      document.getElementById('statCompleted').textContent = `${completedMissions.size} / ${missions.length}`;
+
+      const levelIdx = Math.min(20, Math.floor(completedMissions.size));
+      const levelName = levelTitles[Math.max(0, levelIdx - 1)] || 'Inicial';
+
+      document.getElementById('statLevelName').textContent = `Nivel ${Math.max(1, levelIdx)}: ${levelName}`;
+      document.getElementById('currentLevelNumberText').textContent = levelIdx;
+
+      renderLevelBadges();
+
+      if (completedMissions.size === missions.length) {
+        const certBtn = document.getElementById('downloadCertBtn');
+        certBtn.disabled = false;
+        certBtn.className = 'bg-[#E05650] hover:bg-[#C9433D] text-white px-6 py-3.5 rounded-2xl font-extrabold text-xs transition shadow-md cursor-pointer';
+        certBtn.textContent = '📜 Ver y Descargar Certificado Final';
+      }
+    }
+
+    function renderPatientsGrid() {
+      const grid = document.getElementById('patientsGrid');
+      grid.innerHTML = '';
+
+      missions.forEach((m, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 rounded-3xl border border-[#F5E3DA] shadow-sm hover:border-[#E05650] transition cursor-pointer space-y-2.5';
+        card.onclick = () => openPatientModal(idx);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-2xl p-2 bg-[#FEF0EC] rounded-2xl">${m.emoji}</span>
+            <span class="text-[10px] font-extrabold bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full uppercase">Caso ${idx + 1}</span>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-gray-800 text-xs sm:text-sm truncate">${m.patientName}</h4>
+            <p class="text-[11px] text-gray-400 font-medium">${m.weeks}</p>
+          </div>
+          <p class="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">${m.copy}</p>
+          <div class="pt-1 flex items-center justify-between text-xs font-bold text-[#E05650]">
+            <span>Ver Historia</span>
+            <span>→</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openPatientModal(index) {
+      playSound('click');
+      const m = missions[index];
+      
+      document.getElementById('modalAvatarBox').textContent = m.emoji;
+      document.getElementById('modalRoomLabel').textContent = `EXPEDIENTE ${index + 1}`;
+      document.getElementById('modalPatientName').textContent = m.patientName;
+      document.getElementById('modalWeeks').textContent = m.weeks;
+      document.getElementById('modalReason').textContent = m.title;
+      document.getElementById('modalDescription').textContent = m.copy;
+
+      const actionBtn = document.getElementById('modalStartMissionBtn');
+      actionBtn.onclick = () => {
+        closePatientModal();
+        switchTab('game');
+        loadMission(index);
+      };
+
+      const modal = document.getElementById('patientModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePatientModal() {
+      const modal = document.getElementById('patientModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderLevelBadges() {
+      const container = document.getElementById('levelsBadgesGrid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      missions.forEach((m, idx) => {
+        const isUnlocked = completedMissions.has(idx);
+        const box = document.createElement('div');
+        box.className = `p-3 rounded-2xl border text-center transition space-y-1 ${
+          isUnlocked ? 'bg-[#FEF0EC] border-[#FAC6B3] shadow-sm' : 'bg-gray-50 border-gray-100 opacity-50'
+        }`;
+
+        box.innerHTML = `
+          <div class="text-2xl">${isUnlocked ? m.badge : '🔒'}</div>
+          <p class="text-[10px] font-extrabold text-gray-800">Misión ${idx + 1}</p>
+          <p class="text-[9px] text-gray-500 leading-tight truncate">${m.badgeName}</p>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    let ctgAnimationId = null;
+
+    function initCtgCanvas() {
+      const canvas = document.getElementById('ctgCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = canvas.offsetWidth || 600;
+      canvas.height = canvas.offsetHeight || 80;
+
+      let pointsFHR = [];
+      let pointsUC = [];
+      const maxPoints = Math.floor(canvas.width / 2.5);
+
+      if (ctgAnimationId) cancelAnimationFrame(ctgAnimationId);
+      let ucAngle = 0;
+
+      function drawDualTrace() {
+        ctx.fillStyle = '#111A19';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = '#1D2E2C';
+        ctx.lineWidth = 1;
+        for (let g = 0; g < canvas.width; g += 18) {
+          ctx.beginPath();
+          ctx.moveTo(g, 0);
+          ctx.lineTo(g, canvas.height);
+          ctx.stroke();
+        }
+
+        const baselineFHR = canvas.height * 0.35;
+        const noiseFHR = (Math.random() - 0.5) * 6;
+        let spikeFHR = 0;
+        if (Math.random() < 0.06) {
+          spikeFHR = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 12);
+        }
+
+        pointsFHR.push(baselineFHR + noiseFHR + spikeFHR);
+        if (pointsFHR.length > maxPoints) pointsFHR.shift();
+
+        ucAngle += 0.03;
+        const baselineUC = canvas.height * 0.85;
+        const ucWave = Math.sin(ucAngle) * 8;
+        pointsUC.push(baselineUC - Math.abs(ucWave));
+        if (pointsUC.length > maxPoints) pointsUC.shift();
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 1.8;
+        for (let i = 0; i < pointsFHR.length; i++) {
+          const px = i * 2.5;
+          const py = pointsFHR[i];
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < pointsUC.length; i++) {
+          const px = i * 2.5;
+          const py = pointsUC[i];
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        ctgAnimationId = requestAnimationFrame(drawDualTrace);
+      }
+
+      drawDualTrace();
+    }
+
+    function openResetModal() {
+      playSound('click');
+      const modal = document.getElementById('resetModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('resetModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function executeReset() {
+      playSound('click');
+      completedMissions.clear();
+      teams.forEach(t => t.score = 0);
+      currentTeamIndex = 0;
+      updateGlobalStats();
+      renderTeamsScoreboard();
+      loadMission(0);
+      closeResetModal();
+      switchTab('home');
+    }
+
+    function openCertificateModal() {
+      playSound('click');
+      const container = document.getElementById('certTeamsSummary');
+      if (container) {
+        container.innerHTML = '';
+        for (let i = 0; i < numActiveTeams; i++) {
+          const t = teams[i];
+          const div = document.createElement('div');
+          div.className = 'flex justify-between items-center text-xs font-bold text-gray-700 bg-white p-2.5 rounded-xl border border-gray-100';
+          div.innerHTML = `<span>${t.avatar} ${t.name} (${t.players})</span> <span class="text-[#E05650]">${t.score} PTS</span>`;
+          container.appendChild(div);
+        }
+      }
+
+      const modal = document.getElementById('certModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCertModal() {
+      const modal = document.getElementById('certModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  </script>
+</body>
+</html>
